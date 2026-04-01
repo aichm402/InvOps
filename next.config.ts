@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["sql.js"],
+  serverExternalPackages: ["better-sqlite3"],
   turbopack: {},
 };
 

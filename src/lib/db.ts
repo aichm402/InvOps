@@ -1,30 +1,30 @@
-import initSqlJs, { Database } from "sql.js";
+import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
 
 const DB_PATH = path.join(process.cwd(), "data", "inventoryops.db");
 
-let db: Database | null = null;
+let db: Database.Database | null = null;
 
-export async function getDb(): Promise<Database> {
+export async function getDb(): Promise<Database.Database> {
   if (db) return db;
 
-  const SQL = await initSqlJs();
-
-  if (fs.existsSync(DB_PATH)) {
-    const buffer = fs.readFileSync(DB_PATH);
-    db = new SQL.Database(buffer);
-  } else {
-    db = new SQL.Database();
-    initializeSchema(db);
-    saveDb(db);
+  const dir = path.dirname(DB_PATH);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
   }
+
+  db = new Database(DB_PATH);
+  db.pragma("journal_mode = WAL");
+  db.pragma("foreign_keys = ON");
+
+  initializeSchema(db);
 
   return db;
 }
 
-function initializeSchema(db: Database) {
-  db.run(`
+function initializeSchema(database: Database.Database) {
+  database.exec(`
     CREATE TABLE IF NOT EXISTS products (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL UNIQUE,
@@ -33,9 +33,7 @@ function initializeSchema(db: Database) {
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
-  `);
 
-  db.run(`
     CREATE TABLE IF NOT EXISTS product_aliases (
       id TEXT PRIMARY KEY,
       product_id TEXT NOT NULL,
@@ -43,9 +41,7 @@ function initializeSchema(db: Database) {
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
     );
-  `);
 
-  db.run(`
     CREATE TABLE IF NOT EXISTS projects (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -54,9 +50,7 @@ function initializeSchema(db: Database) {
       status TEXT NOT NULL DEFAULT 'parsed',
       notes TEXT
     );
-  `);
 
-  db.run(`
     CREATE TABLE IF NOT EXISTS inventory_requirements (
       id TEXT PRIMARY KEY,
       product_id TEXT NOT NULL,
@@ -70,9 +64,7 @@ function initializeSchema(db: Database) {
       FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
       FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
     );
-  `);
 
-  db.run(`
     CREATE TABLE IF NOT EXISTS inventory_stock (
       id TEXT PRIMARY KEY,
       product_id TEXT NOT NULL UNIQUE,
@@ -80,21 +72,12 @@ function initializeSchema(db: Database) {
       last_updated TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
     );
+
+    CREATE INDEX IF NOT EXISTS idx_req_product  ON inventory_requirements(product_id);
+    CREATE INDEX IF NOT EXISTS idx_req_project  ON inventory_requirements(project_id);
+    CREATE INDEX IF NOT EXISTS idx_stock_product ON inventory_stock(product_id);
+    CREATE INDEX IF NOT EXISTS idx_aliases_product ON product_aliases(product_id);
   `);
-}
-
-export function saveDb(database?: Database) {
-  const d = database || db;
-  if (!d) return;
-
-  const dir = path.dirname(DB_PATH);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-
-  const data = d.export();
-  const buffer = Buffer.from(data);
-  fs.writeFileSync(DB_PATH, buffer);
 }
 
 export function query<T = Record<string, unknown>>(
@@ -102,18 +85,12 @@ export function query<T = Record<string, unknown>>(
   params: unknown[] = []
 ): T[] {
   if (!db) throw new Error("Database not initialized");
-  const stmt = db.prepare(sql);
-  stmt.bind(params);
-  const results: T[] = [];
-  while (stmt.step()) {
-    results.push(stmt.getAsObject() as T);
-  }
-  stmt.free();
-  return results;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return db.prepare(sql).all(...(params as any[])) as T[];
 }
 
 export function run(sql: string, params: unknown[] = []) {
   if (!db) throw new Error("Database not initialized");
-  db.run(sql, params);
-  saveDb();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  db.prepare(sql).run(...(params as any[]));
 }
