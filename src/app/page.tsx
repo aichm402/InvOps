@@ -9,6 +9,8 @@ import {
   TrendingUp,
   Upload,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { formatQuantity, type DisplayUnit } from "@/lib/units";
 import { LogoIcon } from "@/components/Logo";
@@ -26,32 +28,61 @@ interface Analytics {
   byProject: { project_name: string; product_count: number; total_ml: number }[];
 }
 
-interface InventoryItem {
+interface Project {
+  id: string;
+  name: string;
+  source_filename: string;
+  upload_date: string;
+  product_count: number;
+  total_required_ml: number;
+  flagged_count: number;
+}
+
+interface ProjectRequirement {
+  id: string;
   product_id: string;
   product_name: string;
   canonical_name: string;
-  quantity_on_hand_ml: number;
-  total_required_ml: number;
-  status: string;
-  deficit_ml: number;
+  required_quantity_ml: number;
+  original_quantity: number;
+  original_unit: string;
+  flagged: number;
+  flag_reason: string | null;
+}
+
+interface ProjectDetail extends Project {
+  requirements: ProjectRequirement[];
 }
 
 export default function DashboardPage() {
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
-  const [alerts, setAlerts] = useState<InventoryItem[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [unit, setUnit] = useState<DisplayUnit>("mL");
   const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [detail, setDetail] = useState<ProjectDetail | null>(null);
 
   useEffect(() => {
     Promise.all([
       fetch("/api/analytics").then((r) => r.json()),
-      fetch("/api/inventory").then((r) => r.json()),
-    ]).then(([a, inv]) => {
+      fetch("/api/projects").then((r) => r.json()),
+    ]).then(([a, projs]) => {
       setAnalytics(a);
-      setAlerts(inv.filter((i: InventoryItem) => i.status !== "sufficient"));
+      setProjects(projs);
       setLoading(false);
     });
   }, []);
+
+  const toggleExpand = async (id: string) => {
+    if (expandedId === id) {
+      setExpandedId(null);
+      setDetail(null);
+      return;
+    }
+    setExpandedId(id);
+    const res = await fetch(`/api/projects/${id}`);
+    setDetail(await res.json());
+  };
 
   if (loading) {
     return (
@@ -124,46 +155,107 @@ export default function DashboardPage() {
         </Link>
         <StatCard
           icon={<AlertTriangle size={20} />}
-          label="Low/Out Stock"
-          value={alerts.length}
-          color={alerts.length > 0 ? "var(--danger)" : "var(--success)"}
+          label="Flagged Products"
+          value={projects.reduce((n, p) => n + p.flagged_count, 0)}
+          color={projects.some((p) => p.flagged_count > 0) ? "var(--warning, #f59e0b)" : "var(--success)"}
         />
       </div>
 
-      {/* Two columns: alerts + recent projects */}
+      {/* Two columns: projects + recent projects summary */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
-        {/* Alerts */}
+        {/* Projects panel */}
         <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 8, overflow: "hidden" }}>
           <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <h2 style={{ fontSize: "0.9375rem", fontWeight: 600 }}>Stock Alerts</h2>
-            <Link href="/inventory" style={{ fontSize: "0.75rem", color: "var(--accent)", textDecoration: "none", display: "flex", alignItems: "center", gap: 2 }}>
+            <h2 style={{ fontSize: "0.9375rem", fontWeight: 600 }}>Projects</h2>
+            <Link href="/projects" style={{ fontSize: "0.75rem", color: "var(--accent)", textDecoration: "none", display: "flex", alignItems: "center", gap: 2 }}>
               View all <ChevronRight size={14} />
             </Link>
           </div>
-          {alerts.length === 0 ? (
+          {projects.length === 0 ? (
             <div style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)", fontSize: "0.875rem" }}>
-              All products sufficiently stocked
+              No projects yet.{" "}
+              <Link href="/upload" style={{ color: "var(--accent)" }}>Upload a spray plan</Link>
             </div>
           ) : (
-            <div style={{ maxHeight: 320, overflowY: "auto" }}>
-              {alerts.slice(0, 8).map((item) => (
-                <div
-                  key={item.product_id}
-                  style={{
-                    padding: "0.75rem 1.25rem",
-                    display: "flex", justifyContent: "space-between", alignItems: "center",
-                    borderBottom: "1px solid var(--border)",
-                  }}
-                >
-                  <div>
-                    <div style={{ fontSize: "0.875rem", fontWeight: 500 }}>{item.canonical_name}</div>
-                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: 2 }}>
-                      Need: {formatQuantity(item.total_required_ml, unit)} {unit} · Have: {formatQuantity(item.quantity_on_hand_ml, unit)} {unit}
+            <div style={{ maxHeight: 420, overflowY: "auto" }}>
+              {projects.slice(0, 8).map((proj) => (
+                <div key={proj.id} style={{ borderBottom: "1px solid var(--border)" }}>
+                  {/* Project row */}
+                  <div
+                    style={{
+                      padding: "0.75rem 1.25rem",
+                      display: "flex", justifyContent: "space-between", alignItems: "center",
+                      cursor: "pointer",
+                    }}
+                    onClick={() => toggleExpand(proj.id)}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.625rem", minWidth: 0 }}>
+                      {expandedId === proj.id ? <ChevronUp size={15} style={{ flexShrink: 0 }} /> : <ChevronDown size={15} style={{ flexShrink: 0 }} />}
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: "0.875rem", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {proj.name}
+                        </div>
+                        <div style={{ fontSize: "0.6875rem", color: "var(--text-muted)", marginTop: 1 }}>
+                          {new Date(proj.upload_date).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexShrink: 0 }}>
+                      <span className="badge badge-info">{proj.product_count} products</span>
+                      <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontFamily: "'JetBrains Mono', monospace" }}>
+                        {formatQuantity(proj.total_required_ml, unit)} {unit}
+                      </span>
+                      {proj.flagged_count > 0 && (
+                        <span className="badge badge-warning" style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                          <AlertTriangle size={11} /> {proj.flagged_count}
+                        </span>
+                      )}
                     </div>
                   </div>
-                  <span className={`badge ${item.status === "out" ? "badge-danger" : "badge-warning"}`}>
-                    {item.status === "out" ? "Out" : "Low"}
-                  </span>
+
+                  {/* Expanded product rows */}
+                  {expandedId === proj.id && detail && (
+                    <div style={{ borderTop: "1px solid var(--border)", background: "var(--bg-surface, var(--bg))" }}>
+                      {detail.requirements?.map((req) => (
+                        <div
+                          key={req.id}
+                          style={{
+                            padding: "0.5rem 1.25rem 0.5rem 2.75rem",
+                            display: "flex", justifyContent: "space-between", alignItems: "center",
+                            borderBottom: "1px solid var(--border)",
+                            fontSize: "0.8125rem",
+                          }}
+                        >
+                          <div>
+                            <span style={{ fontWeight: 500 }}>{req.canonical_name}</span>
+                            {req.product_name !== req.canonical_name && (
+                              <span style={{ color: "var(--text-muted)", fontSize: "0.75rem", marginLeft: 6 }}>
+                                ({req.product_name})
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
+                            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                              {formatQuantity(req.required_quantity_ml, unit)} {unit}
+                            </span>
+                            {req.flagged ? (
+                              <Link
+                                href="/projects"
+                                style={{ textDecoration: "none" }}
+                                title={req.flag_reason ?? "Review this product match"}
+                              >
+                                <span className="badge badge-warning" style={{ display: "flex", alignItems: "center", gap: 3, fontSize: "0.6875rem" }}>
+                                  <AlertTriangle size={10} /> Review
+                                </span>
+                              </Link>
+                            ) : (
+                              <span className="badge badge-success" style={{ fontSize: "0.6875rem" }}>OK</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

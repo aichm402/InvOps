@@ -30,6 +30,8 @@ const FORM_UNIT_PATTERNS = [
   /LBA?E?\/GAL/i,
   /GA\/L/i,
   /gAE\/L/i,
+  /g\/L/i,
+  /g\/kg/i,
   /lb\/gal/i,
   /LB\/GAL/i,
   /%/,
@@ -134,26 +136,22 @@ function extractProductQuantities(text: string, warnings: string[]): ParsedProdu
       }
     }
 
+    // Skip blank lines within the section — products can be separated by blank rows
+    if (line === "") continue;
+
     // End of section detection
     if (
       line.startsWith("*") ||
       line.includes("Per area") ||
       line.includes("Per volume") ||
       line.includes("Product amount calculations") ||
-      line === "" ||
       line.includes("General Trial Information") ||
       line.includes("Status:") ||
       line.includes("ARM Trial Created") ||
       line.includes("Regulations")
     ) {
-      if (products.length > 0) {
-        // We found products, stop if we hit a blank line or notes section
-        inSection = false;
-        continue;
-      }
-      // Keep looking if we haven't found any products yet
-      if (line.startsWith("*")) continue;
-      if (line === "") continue;
+      inSection = false;
+      continue;
     }
 
     // Try to parse a product line
@@ -174,7 +172,7 @@ function parseProductLine(line: string): ParsedProduct | null {
   // Example: 770.833 mL ATRAZIN 4L 480 GA/L SC
 
   // Match amount at start (with optional commas)
-  const amountMatch = line.match(/^([\d,]+\.?\d*)\s+(mL|L|gal|GAL|fl\s*oz)/i);
+  const amountMatch = line.match(/^([\d,]+\.?\d*)\s+(mL|L|gal|GAL|fl\s*oz|g\b)/i);
   if (!amountMatch) return null;
 
   const rawAmount = amountMatch[1].replace(/,/g, "");

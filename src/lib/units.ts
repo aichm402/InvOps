@@ -11,6 +11,8 @@ const TO_ML: Record<string, number> = {
   "fl oz": 29.5735,
   "FL OZ": 29.5735,
   "oz (dry)": 29.5735, // approximate for display
+  g: 1,    // dry weight — stored as-is (1 g = 1 unit internally)
+  oz: 28.3495, // dry oz
 };
 
 // Convert any recognized unit to mL
@@ -54,5 +56,6 @@ export function detectUnit(unitStr: string): string {
   if (s === "gal" || s === "gallon" || s === "gallons") return "gal";
   if (s.includes("fl") && s.includes("oz")) return "fl oz";
   if (s === "oz") return "fl oz";
+  if (s === "g" || s === "gram" || s === "grams") return "g";
   return "mL";
 }
