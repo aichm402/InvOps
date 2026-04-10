@@ -2,8 +2,8 @@ import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 
 export const metadata = {
-  title: "InventoryOps — Herbicide Inventory Management",
-  description: "Parse ARM spray plan PDFs and manage herbicide inventory",
+  title: "FieldOps — Research Management",
+  description: "Parse ARM spray plan PDFs and manage field research inventory",
 };
 
 export default function RootLayout({

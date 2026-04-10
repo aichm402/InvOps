@@ -86,7 +86,7 @@ export default function Sidebar() {
           color: "var(--text-muted)",
         }}
       >
-        ARM Spray Plan Parser
+        FieldOps — Research Management
       </div>
     </aside>
   );

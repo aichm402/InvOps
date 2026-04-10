@@ -139,7 +139,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <LogoFull iconSize={80} />
+          <LogoFull iconSize={28} />
         </div>
         <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
           <Link
