@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Search, Edit3, Check, X, Trash2, Plus, FileDown, Pencil, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { formatQuantity, fromMl, toMl, type DisplayUnit } from "@/lib/units";
+import { LogoFull } from "@/components/Logo";
 
 interface InventoryItem {
   product_id: string;
@@ -161,12 +162,15 @@ export default function InventoryPage() {
 
   return (
     <div style={{ maxWidth: 1200 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem" }}>
         <div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 600, letterSpacing: "-0.02em" }}>Inventory</h1>
-          <p style={{ color: "var(--text-muted)", fontSize: "0.875rem", marginTop: 4 }}>
-            {items.length} products tracked
-          </p>
+          <LogoFull iconSize={38} />
+          <div style={{ marginTop: "0.875rem", paddingLeft: 2 }}>
+            <h1 style={{ fontSize: "1.5rem", fontWeight: 600, letterSpacing: "-0.02em" }}>Inventory</h1>
+            <p style={{ color: "var(--text-muted)", fontSize: "0.875rem", marginTop: 4 }}>
+              {items.length} products tracked
+            </p>
+          </div>
         </div>
         <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
           <select
