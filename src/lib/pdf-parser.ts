@@ -273,6 +273,8 @@ const EPPO_TO_CROP: Record<string, string> = {
   BRSNN: "Canola",
   BRSNO: "Canola",
   SORIC: "Sorghum",
+  SORBI: "Grain Sorghum",
+  SORVU: "Grain Sorghum",
   ORYSA: "Rice",
   HELAN: "Sunflower",
   PIBSA: "Field Pea",
@@ -295,10 +297,12 @@ const KNOWN_TIMINGS = new Set([
 function extractCrop(text: string): string | null {
   // ARM PDFs have a "Crop Description" section with lines like:
   //   Crop 1: C GLXMA Glycine max Soybean
-  //   Crop 1: C ZEAME Zea mays subsp. everta popcorn
-  // The EPPO code is always 5 uppercase letters after "C " (or directly after "Crop 1: ")
+  //   Crop 1: C SORBI Sorghum bicolor grain sorghum
+  // Use [^\n]+ (not [\w\s.]+) so we never bleed into the next line
+  // — ARM PDFs often have "Scale:" or "Plot Scale:" on the line immediately after,
+  //   which the greedy \s would otherwise capture and return as the crop name.
   const cropLineMatch = text.match(
-    /Crop\s+1:\s+(?:[A-Z]\s+)?([A-Z]{5})\s+([\w\s.]+)/m
+    /Crop\s+1:\s+(?:[A-Z]\s+)?([A-Z]{5})\s+([^\n]+)/m
   );
   if (!cropLineMatch) return null;
 
@@ -308,22 +312,28 @@ function extractCrop(text: string): string | null {
   // EPPO lookup first
   if (EPPO_TO_CROP[eppoCode]) {
     const base = EPPO_TO_CROP[eppoCode];
-    // Refine: if the last word of rest is a more specific common name not in the EPPO map,
-    // use it (e.g., "popcorn" instead of generic "Corn")
+    // Refine: if rest ends with a more specific common name, use it
+    // (e.g., "popcorn" or "milo" instead of the generic EPPO label)
     const tokens = rest.split(/\s+/).filter(Boolean);
     const lastWord = tokens[tokens.length - 1]?.toLowerCase();
-    const specificNames = ["popcorn", "sweetcorn", "sorghum"];
+    const specificNames = ["popcorn", "sweetcorn", "sorghum", "milo", "sudangrass"];
     if (lastWord && specificNames.includes(lastWord)) {
       return lastWord.charAt(0).toUpperCase() + lastWord.slice(1);
     }
     return base;
   }
 
-  // Fallback: take the last token from the rest string (common name convention)
-  const tokens = rest.split(/\s+/).filter(Boolean);
+  // Fallback: strip parenthetical content then find the last all-lowercase word
+  // (scientific names are CamelCase; common names are lowercase)
+  const stripped = rest.replace(/\([^)]*\)/g, "").trim();
+  const tokens = stripped.split(/\s+/).filter(Boolean);
+  for (let i = tokens.length - 1; i >= 0; i--) {
+    if (/^[a-z][a-z-]+$/.test(tokens[i])) {
+      return tokens[i].charAt(0).toUpperCase() + tokens[i].slice(1);
+    }
+  }
   if (tokens.length > 0) {
-    const last = tokens[tokens.length - 1];
-    return last.charAt(0).toUpperCase() + last.slice(1).toLowerCase();
+    return tokens[tokens.length - 1].charAt(0).toUpperCase() + tokens[tokens.length - 1].slice(1).toLowerCase();
   }
 
   return null;
