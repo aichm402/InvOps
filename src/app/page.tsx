@@ -13,7 +13,6 @@ import {
   CalendarDays,
 } from "lucide-react";
 import { formatQuantity } from "@/lib/units";
-import { LogoFull } from "@/components/Logo";
 
 interface Analytics {
   summary: {
@@ -138,8 +137,8 @@ export default function DashboardPage() {
     <div style={{ maxWidth: 1200 }}>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <LogoFull iconSize={28} />
+        <div>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 600, letterSpacing: "-0.02em" }}>Dashboard</h1>
         </div>
         <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
           <Link
