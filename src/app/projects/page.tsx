@@ -342,7 +342,10 @@ export default function ProjectsPage() {
     <div style={{ maxWidth: 1200 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
         <div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 600, letterSpacing: "-0.02em" }}>Project Details</h1>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <FolderOpen size={22} color="var(--accent)" />
+            <h1 style={{ fontSize: "1.5rem", fontWeight: 600, letterSpacing: "-0.02em" }}>Project Details</h1>
+          </div>
           <p style={{ color: "var(--text-muted)", fontSize: "0.875rem", marginTop: 4 }}>
             {visibleProjects.length}{visibleProjects.length !== projects.length ? ` of ${projects.length}` : ""} spray plan{projects.length !== 1 ? "s" : ""}
           </p>
