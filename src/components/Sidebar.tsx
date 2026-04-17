@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Package, FolderOpen, BarChart3, Upload, CalendarDays } from "lucide-react";
+import { LayoutDashboard, Package, FolderOpen, BarChart3, Upload, CalendarDays, ClipboardList } from "lucide-react";
 import { LogoFull } from "@/components/Logo";
 
 const NAV_ITEMS = [
@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/projects", label: "Project Details", icon: FolderOpen },
   { href: "/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/data-collection", label: "Data Collection", icon: ClipboardList },
   { href: "/upload", label: "Upload PDF", icon: Upload },
 ];
 
