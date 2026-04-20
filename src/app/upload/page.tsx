@@ -74,7 +74,7 @@ export default function UploadPage() {
 
   return (
     <div style={{ maxWidth: 1000 }}>
-      <div style={{ marginBottom: "1.5rem" }}>
+      <div style={{ marginBottom: "2rem" }}>
         <h1 style={{ fontSize: "1.5rem", fontWeight: 600, letterSpacing: "-0.02em" }}>Upload Spray Plan</h1>
         <p style={{ color: "var(--text-muted)", fontSize: "0.875rem", marginTop: 4 }}>
           Upload ARM spray plan PDFs to extract product requirements

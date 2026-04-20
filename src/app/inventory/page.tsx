@@ -152,16 +152,12 @@ export default function InventoryPage() {
   };
 
   if (loading) {
-    return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "60vh" }}>
-        <div style={{ color: "var(--text-muted)" }}>Loading inventory...</div>
-      </div>
-    );
+    return <div className="loading-state"><div style={{ color: "var(--text-muted)" }}>Loading inventory...</div></div>;
   }
 
   return (
     <div style={{ maxWidth: 1200 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <Package size={22} color="var(--accent)" />

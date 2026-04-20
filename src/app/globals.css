@@ -78,3 +78,7 @@ input::placeholder { color: var(--text-muted); }
 .badge-warning { background: var(--warning-muted); color: var(--warning); }
 .badge-danger { background: var(--danger-muted); color: var(--danger); }
 .badge-info { background: var(--accent-muted); color: var(--accent); }
+
+.loading-state {
+  display: flex; align-items: center; justify-content: center; height: 60vh;
+}

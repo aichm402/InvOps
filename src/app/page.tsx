@@ -117,19 +117,11 @@ export default function DashboardPage() {
   };
 
   if (loading) {
-    return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "60vh" }}>
-        <div style={{ color: "var(--text-muted)" }}>Loading dashboard...</div>
-      </div>
-    );
+    return <div className="loading-state"><div style={{ color: "var(--text-muted)" }}>Loading dashboard...</div></div>;
   }
 
   if (error) {
-    return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "60vh" }}>
-        <div style={{ color: "var(--danger)", fontSize: "0.875rem" }}>{error}</div>
-      </div>
-    );
+    return <div className="loading-state"><div style={{ color: "var(--danger)", fontSize: "0.875rem" }}>{error}</div></div>;
   }
 
   const summary = analytics?.summary;

@@ -20,7 +20,8 @@ function buildPrintHTML(
   date: string,
   location: string,
   dat: string,
-  dataLabels: string[]
+  dataLabels: string[],
+  orientation: "portrait" | "landscape"
 ): string {
   const headerVal = (val: string, label: string) =>
     `<span class="hdr-label">${label}</span><span class="hdr-val">${val || ""}</span>`;
@@ -57,7 +58,7 @@ function buildPrintHTML(
   <meta charset="utf-8" />
   <title>Ratings Sheet</title>
   <style>
-    @page { size: landscape; margin: 0.5in; }
+    @page { size: ${orientation}; margin: 0.5in; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Arial, sans-serif; font-size: 9pt; }
 
@@ -157,6 +158,7 @@ export default function DataCollectionPage() {
   const [location, setLocation] = useState("");
   const [dat, setDat] = useState("");
   const [dataLabels, setDataLabels] = useState<string[]>(Array(5).fill(""));
+  const [orientation, setOrientation] = useState<"portrait" | "landscape">("landscape");
 
   function setLabel(index: number, value: string) {
     setDataLabels((prev) => {
@@ -167,7 +169,7 @@ export default function DataCollectionPage() {
   }
 
   function handleGenerate() {
-    const html = buildPrintHTML(project, date, location, dat, dataLabels);
+    const html = buildPrintHTML(project, date, location, dat, dataLabels, orientation);
     const blob = new Blob([html], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     const win = window.open(url, "_blank");
@@ -307,25 +309,52 @@ export default function DataCollectionPage() {
         </div>
       </div>
 
-      <button
-        onClick={handleGenerate}
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "0.5rem",
-          background: "var(--accent)",
-          color: "#fff",
-          border: "none",
-          borderRadius: 6,
-          padding: "0.625rem 1.25rem",
-          fontSize: "0.875rem",
-          fontWeight: 600,
-          cursor: "pointer",
-        }}
-      >
-        <FileDown size={16} />
-        Generate Ratings Sheet
-      </button>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+        {/* Orientation toggle */}
+        <div style={{ display: "flex", border: "1px solid var(--border)", borderRadius: 6, overflow: "hidden" }}>
+          {(["portrait", "landscape"] as const).map((o) => (
+            <button
+              key={o}
+              onClick={() => setOrientation(o)}
+              style={{
+                padding: "0.5rem 0.875rem",
+                fontSize: "0.8125rem",
+                border: "none",
+                cursor: "pointer",
+                background: orientation === o ? "var(--accent)" : "var(--bg-secondary)",
+                color: orientation === o ? "#fff" : "var(--text-secondary)",
+                fontFamily: "inherit",
+                fontWeight: orientation === o ? 600 : 400,
+                textTransform: "capitalize",
+                transition: "background 0.15s, color 0.15s",
+              }}
+            >
+              {o}
+            </button>
+          ))}
+        </div>
+
+        <button
+          onClick={handleGenerate}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            background: "var(--accent)",
+            color: "#fff",
+            border: "none",
+            borderRadius: 6,
+            padding: "0.625rem 1.25rem",
+            fontSize: "0.875rem",
+            fontWeight: 600,
+            cursor: "pointer",
+            fontFamily: "inherit",
+          }}
+        >
+          <FileDown size={16} />
+          Generate Ratings Sheet
+        </button>
+      </div>
     </div>
   );
 }

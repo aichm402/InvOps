@@ -34,6 +34,14 @@ const STATUS_COLORS: Record<string, string> = {
   out: "#f87171",
 };
 
+const CHART_TICK_COLOR = "#9599b3";
+const CHART_TOOLTIP_STYLE = {
+  background: "#1a1d2b",
+  border: "1px solid #2a2e42",
+  borderRadius: 6,
+  fontSize: "0.8125rem",
+} as const;
+
 export default function AnalyticsPage() {
   const [data, setData] = useState<Analytics | null>(null);
   const [unit, setUnit] = useState<DisplayUnit>("mL");
@@ -49,11 +57,7 @@ export default function AnalyticsPage() {
   }, []);
 
   if (loading || !data) {
-    return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "60vh" }}>
-        <div style={{ color: "var(--text-muted)" }}>Loading analytics...</div>
-      </div>
-    );
+    return <div className="loading-state"><div style={{ color: "var(--text-muted)" }}>Loading analytics...</div></div>;
   }
 
   const barData = data.topProducts.map((p) => ({
@@ -116,19 +120,14 @@ export default function AnalyticsPage() {
                 <BarChart data={barData} margin={{ top: 5, right: 20, bottom: 30, left: 10 }}>
                   <XAxis
                     dataKey="name"
-                    tick={{ fill: "#9599b3", fontSize: 11 }}
+                    tick={{ fill: CHART_TICK_COLOR, fontSize: 11 }}
                     angle={-35}
                     textAnchor="end"
                     height={60}
                   />
-                  <YAxis tick={{ fill: "#9599b3", fontSize: 11 }} />
+                  <YAxis tick={{ fill: CHART_TICK_COLOR, fontSize: 11 }} />
                   <Tooltip
-                    contentStyle={{
-                      background: "#1a1d2b",
-                      border: "1px solid #2a2e42",
-                      borderRadius: 6,
-                      fontSize: "0.8125rem",
-                    }}
+                    contentStyle={CHART_TOOLTIP_STYLE}
                     labelStyle={{ color: "#e8eaf0" }}
                     formatter={(value: unknown, name: unknown) => [
                       `${Number(value).toFixed(2)} ${unit}`,
@@ -174,16 +173,11 @@ export default function AnalyticsPage() {
                   <Legend
                     verticalAlign="bottom"
                     formatter={(value: unknown) => (
-                      <span style={{ color: "#9599b3", fontSize: "0.8125rem" }}>{String(value)}</span>
+                      <span style={{ color: CHART_TICK_COLOR, fontSize: "0.8125rem" }}>{String(value)}</span>
                     )}
                   />
                   <Tooltip
-                    contentStyle={{
-                      background: "#1a1d2b",
-                      border: "1px solid #2a2e42",
-                      borderRadius: 6,
-                      fontSize: "0.8125rem",
-                    }}
+                    contentStyle={CHART_TOOLTIP_STYLE}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -204,19 +198,14 @@ export default function AnalyticsPage() {
                 <BarChart data={projectData} margin={{ top: 5, right: 20, bottom: 30, left: 10 }}>
                   <XAxis
                     dataKey="name"
-                    tick={{ fill: "#9599b3", fontSize: 11 }}
+                    tick={{ fill: CHART_TICK_COLOR, fontSize: 11 }}
                     angle={-20}
                     textAnchor="end"
                     height={50}
                   />
-                  <YAxis tick={{ fill: "#9599b3", fontSize: 11 }} />
+                  <YAxis tick={{ fill: CHART_TICK_COLOR, fontSize: 11 }} />
                   <Tooltip
-                    contentStyle={{
-                      background: "#1a1d2b",
-                      border: "1px solid #2a2e42",
-                      borderRadius: 6,
-                      fontSize: "0.8125rem",
-                    }}
+                    contentStyle={CHART_TOOLTIP_STYLE}
                     formatter={(value: unknown, name: unknown) => [
                       name === "total" ? `${Number(value).toFixed(2)} ${unit}` : String(value),
                       name === "total" ? "Total Volume" : "Products",
